@@ -12,6 +12,12 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { XIcon } from "@heroicons/react/outline";
+import AceEditor from "react-ace";
+import "ace-builds/src-noconflict/mode-python";
+import "ace-builds/src-noconflict/theme-github";
+import { CopyToClipboard } from "react-copy-to-clipboard";
+import { ClipboardCopyIcon } from "@heroicons/react/solid";
+import Sidebar from "./Sidebar.jsx";
 
 function App() {
   const [question, setQuestion] = useState("");
@@ -43,6 +49,7 @@ function App() {
       }, 5000);
       return;
     }
+
     // Execute the code and compare the output with expected results
     try {
       const response = await axios.post(
@@ -82,7 +89,7 @@ function App() {
   };
 
   const generateRefinedQuestion = async () => {
-    if (!question || !testcase1 || !testcase2) {
+    if (!question) {
       setError(
         "All fields must be filled before generating the refined question."
       );
@@ -221,11 +228,16 @@ function App() {
   };
 
   return (
-    <div className="App p-8 space-y-4">
-      <h1 className="text-4xl  justify-center  items-center flex-col flex  pb-4 font-bold relative">
-        Data Structure & Algorithm Solution Generator
-        <div className="h-1  w-full bg-blue-500 mt-4"></div>
-      </h1>
+    <div className="App p-8 pb-0 space-y-4">
+      <div className="relative flex justify-center items-center">
+        <h1 className="text-2xl sm:text-4xl flex-col font-bold ">
+          🧩 Data Structure & Algorithm Solution Generator
+        </h1>
+        <div className="absolute right-0 top-5 sm:top-0 mt-2">
+          <Sidebar />
+        </div>
+      </div>
+      <div className="h-1 w-full bg-blue-500 mt-4"></div>
 
       {error && (
         <div className="p-2 bg-red-500 text-white rounded relative">
@@ -239,9 +251,9 @@ function App() {
           </button>
         </div>
       )}
-      <div className="flex flex-wrap gap-4">
+      <div className="sm:flex  flex-wrap   gap-4 ">
         <div className="flex-grow" style={{ flex: 4 }}>
-          <h1 className="text-2xl pb-2 font-bold">Enter Question</h1>
+          <h1 className="text-2xl pb-2  font-bold">Enter Question</h1>
           <textarea
             className="w-full p-2 border rounded"
             placeholder="Enter the question"
@@ -251,8 +263,10 @@ function App() {
           />
         </div>
 
-        <div className="flex-grow" style={{ flex: 1 }}>
-          <h1 className="text-2xl pb-2 font-bold">Enter Testcases</h1>
+        <div className="flex-grow " style={{ flex: 1 }}>
+          <h1 className="text-2xl pt-2 sm:pt-0 sm:visible pb-2  font-bold">
+            Enter Testcases
+          </h1>
           <textarea
             className="w-full p-2 border rounded"
             placeholder="Enter Testcase 1"
@@ -267,8 +281,10 @@ function App() {
           />
         </div>
 
-        <div className="flex-grow" style={{ flex: 1 }}>
-          <h1 className="text-2xl font-bold pb-2 invisible">Testcase 2</h1>
+        <div className="flex-grow hidden sm:block" style={{ flex: 1 }}>
+          <h1 className="text-xs invisible  sm:text-2xl pb-2  font-bold">
+            Enter Testcases2
+          </h1>
           <textarea
             className="w-full p-2 border rounded"
             placeholder="Enter Testcase 2"
@@ -286,77 +302,121 @@ function App() {
 
       <div className="flex gap-4">
         <button
-          className="p-2 bg-blue-500 text-white rounded"
+          className="p-2 bg-blue-500 text-white rounded transform active:bg-blue-700 active:scale-90 transition duration-150"
           onClick={generateRefinedQuestion}
         >
           Generate Refined Question
         </button>
       </div>
+      <section className=" -mx-8 py-4 bg-gray-100 ">
+        <section className="flex-col mx-8  flex gap-4">
+          <div className=" sm:flex flex-wrap gap-4">
+            <div className="flex-grow" style={{ flex: 4 }}>
+              <h2 className="text-2xl font-bold pb-2">Refined Question</h2>
+              <textarea
+                className="w-full p-2 border rounded"
+                rows="6"
+                value={refinedQuestion}
+                onChange={(e) => setRefinedQuestion(e.target.value)}
+                placeholder="Will be generated here"
+              />
+            </div>
+            <div style={{ flex: 2 }}>
+              <h2 className="text-2xl font-bold  pb-2">Function Signature</h2>
+              <div className="flex w-full">
+                <AceEditor
+                  mode="python"
+                  theme="monokai"
+                  onChange={(newValue) => setFunctionSignature(newValue)}
+                  name="pythonEditor"
+                  editorProps={{ $blockScrolling: true }}
+                  value={functionSignature}
+                  setOptions={{
+                    fontSize: "11pt",
+                    highlightActiveLine: false,
+                  }}
+                  className="border w-full rounded"
+                  style={{ width: "100%", height: "11em" }} // Set width and height to 100%
+                />
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-4">
+            <button
+              className="p-2 bg-blue-500 text-white rounded transform active:bg-blue-700 active:scale-90 transition duration-150"
+              onClick={generateSolution}
+            >
+              Generate Solutions
+            </button>
+            <div className="flex items-center space-x-2">
+              <input
+                className="p-2 border rounded"
+                type="number"
+                min="1"
+                max="10"
+                value={iterationLimit}
+                onChange={(e) => setIterationLimit(e.target.value)}
+              />
+              <span>Iteration limit</span>
+            </div>{" "}
+          </div>{" "}
+        </section>{" "}
+      </section>
 
-      <div className="flex flex-wrap gap-4">
-        <div className="flex-grow" style={{ flex: 4 }}>
-          <h2 className="text-2xl font-bold pb-2">Refined Question</h2>
-          <textarea
-            className="w-full p-2 border rounded"
-            rows="6"
-            value={refinedQuestion}
-            onChange={(e) => setRefinedQuestion(e.target.value)}
-          />
-        </div>
-        <div className="flex-grow" style={{ flex: 2 }}>
-          <h2 className="text-2xl font-bold invisible  pb-2">
-            Function Signature
-          </h2>
-          <textarea
-            className="w-full p-2 border rounded"
-            placeholder="Enter Function Signature"
-            value={functionSignature}
-            rows="6"
-            onChange={(e) => setFunctionSignature(e.target.value)}
-          />
-        </div>
-      </div>
-      <div className="flex gap-4">
-        <button
-          className="p-2 bg-blue-500 text-white rounded"
-          onClick={generateSolution}
-        >
-          Generate Solutions
-        </button>
-        <div className="flex items-center space-x-2">
-          <input
-            className="p-2 border rounded"
-            type="number"
-            min="1"
-            max="10"
-            value={iterationLimit}
-            onChange={(e) => setIterationLimit(e.target.value)}
-          />
-          <span>Iteration limit</span>
-        </div>{" "}
-      </div>
-
+      {/* <h1 className="t justify-center flex pb-4 font-bold border-b-2 border-gray-200"></h1> */}
       <h2 className="text-2xl font-bold">Outputs</h2>
-      <div className="relative ">
+      <div className="relative pb-8 ">
         {outputs.map((output, index) => (
           <details
             open={index === outputs.length - 1}
             className="mb-2"
             key={index}
           >
-            <summary className="cursor-pointer">Output #{index + 1}</summary>
-            <div className="flex gap-4">
-              <div className="flex-grow" style={{ flex: 4 }}>
-                <h2 className="text-xl font-bold pb-1">Code</h2>
-                <textarea
-                  className="w-full p-2 border rounded"
+            <summary className=" p-2 cursor-pointer bg-gray-300 rounded">
+              Output No.{index + 1}
+            </summary>
+            <div className="flex gap-4 py-2 bg-gray-100 px-4">
+              <div className="flex-grow relative" style={{ flex: 4 }}>
+                <h2 className="text-xl font-bold pb-1">Python Code</h2>
+                <CopyToClipboard
+                  text={output}
+                  className="hidden sm:flex gap-1 opacity-70 border rounded p-1 items-center text-lg transform active:scale-90 transition duration-150 hover:opacity-100"
+                >
+                  <button
+                    style={{
+                      position: "absolute",
+                      right: "10px",
+                      top: "37px",
+                      zIndex: "1",
+                    }}
+                  >
+                    <ClipboardCopyIcon className="h-6 w-6" />
+                    Copy
+                  </button>
+                </CopyToClipboard>
+
+                <AceEditor
+                  mode="python"
+                  theme="monokai"
+                  onChange={(newValue) => setOutput(newValue)}
+                  name="outputEditor"
+                  editorProps={{ $blockScrolling: true }}
                   value={output}
-                  rows="6"
+                  setOptions={{
+                    fontSize: "11pt",
+                    highlightActiveLine: false,
+                  }}
+                  className="border  w-full rounded"
+                  style={{ width: "100%", height: "11em" }}
                   readOnly
                 />
               </div>
               <div className="flex-grow" style={{ flex: 2 }}>
-                <h2 className="text-xl font-bold pb-1">Output</h2>
+                <h2 className="text-xl hidden sm:block font-bold pb-1">
+                  Python Output
+                </h2>
+                <h2 className="text-xl  sm:hidden font-bold pb-1"> Output</h2>
+
                 <textarea
                   className="w-full p-2 border rounded"
                   value={executionResults[index]}
@@ -368,13 +428,61 @@ function App() {
           </details>
         ))}
       </div>
+      {/* <section className=" -mx-8 py-4 bg-gray-100 ">
+        <section className="flex-col mx-8  flex gap-4"></section> */}
 
-      <button
+      <section className=" -mx-8 px-8 bg-gray-100 ">
+        <footer className="flex flex-col py-8 ">
+          <div className="container gap-4 mx-auto flex flex-col md:flex-row justify-between items-center">
+            <div className="w-full md:w-1/2 mb-6 md:mb-0">
+              <h2 className="text-lg font-semibold mb-2">
+                🚀 How to use this tool?
+              </h2>
+              <p className="text-sm">
+                Input your DSA problem in the 'question' field, then provide the
+                testcases and their corresponding expected outputs. The system
+                will then generate a Python solution. You can adjust the
+                iteration limit if needed. Note that the tool is built with
+                GPT-4's capabilities, so large problems might need to be
+                simplified to fit within the 8000 token limit.
+              </p>
+            </div>
+            <div className="w-full mb-6 md:w-1/2">
+              <h2 className="text-lg font-semibold mb-2">
+                🔨 Made by Vaibhav Meena
+              </h2>
+              <p className="text-sm">
+                Vaibhav, a software wizard who is rumored to communicate with AI
+                in its native language of 1s and 0s. After discovering a
+                mysterious love for Python, he's been seen teaching algorithms
+                to dance in perfect harmony.
+              </p>
+            </div>
+          </div>
+          <hr className="my-4" />
+          <div className="text-center py-4">
+            <p className="text-sm text-gray-600">
+              © {new Date().getFullYear()} Vaibhav Meena. All rights reserved.
+            </p>
+            <a
+              href="https://github.com/Frostbite-ai/gpt4leetcode"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 text-sm hover:text-blue-600"
+            >
+              Check out the project on GitHub
+              <span className="heroicon heroicon-github ml-2"></span>
+            </a>
+          </div>
+        </footer>
+      </section>
+
+      {/* <button
         className="p-2 bg-green-500 text-white rounded"
         onClick={handleRunCode}
       >
         Run Code
-      </button>
+      </button> */}
     </div>
   );
 }
