@@ -32,6 +32,8 @@ function App() {
   const [functionSignature, setFunctionSignature] = useState("");
   const [executionResults, setExecutionResults] = useState([]);
   const [outputs, setOutputs] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleClose = () => {
     setError("");
@@ -41,55 +43,60 @@ function App() {
     setOutputs((oldOutputs) => [...oldOutputs, output]);
   };
 
-  const handleRunCode = async () => {
-    if (!question || !testcase1 || !testcase2) {
-      setError("All fields must be filled before running the code.");
-      setTimeout(() => {
-        setError("");
-      }, 5000);
+  // const handleRunCode = async () => {
+  //   if (!question || !testcase1 || !testcase2) {
+  //     setError("All fields must be filled before running the code.");
+  //     setTimeout(() => {
+  //       setError("");
+  //     }, 5000);
+  //     return;
+  //   }
+
+  //   // Execute the code and compare the output with expected results
+  //   try {
+  //     const response = await axios.post(
+  //       `${import.meta.env.VITE_BACKEND_URL}/run-python`,
+  //       {
+  //         code: output,
+  //         testcase: testcase1,
+  //       },
+  //       {
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //       }
+  //     );
+  //     if (response.data.success) {
+  //       console.log("Code executed successfully");
+  //       console.log("Output: ", response.data.output);
+
+  //       // Save the output to the state
+  //       setExecutionResults((oldResults) => [
+  //         ...oldResults,
+  //         response.data.output,
+  //       ]);
+
+  //       // Compare output with expected output
+  //       if (response.data.output.toString().trim() === expectedOutput1.trim()) {
+  //         console.log("Test case passed");
+  //       } else {
+  //         console.log("Test case failed");
+  //       }
+  //     } else {
+  //       console.log("Code execution failed: ", response.data.message);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error executing code: ", error);
+  //   }
+  // };
+
+  const generateRefinedQuestion = async (attempt = 1) => {
+    if (attempt > iterationLimit) {
+      console.log("Max number of attempts reached.");
+      setIsGenerating(false);
       return;
     }
-
-    // Execute the code and compare the output with expected results
-    try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/run-python`,
-        {
-          code: output,
-          testcase: testcase1,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (response.data.success) {
-        console.log("Code executed successfully");
-        console.log("Output: ", response.data.output);
-
-        // Save the output to the state
-        setExecutionResults((oldResults) => [
-          ...oldResults,
-          response.data.output,
-        ]);
-
-        // Compare output with expected output
-        if (response.data.output.toString().trim() === expectedOutput1.trim()) {
-          console.log("Test case passed");
-        } else {
-          console.log("Test case failed");
-        }
-      } else {
-        console.log("Code execution failed: ", response.data.message);
-      }
-    } catch (error) {
-      console.error("Error executing code: ", error);
-    }
-  };
-
-  const generateRefinedQuestion = async () => {
-    if (!question) {
+    if (!question || !testcase1) {
       setError(
         "All fields must be filled before generating the refined question."
       );
@@ -98,6 +105,8 @@ function App() {
       }, 5000);
       return;
     }
+    // Set loading state to true
+    setIsLoading(true);
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/simplify`,
@@ -120,6 +129,9 @@ function App() {
       setRefinedQuestion(response.data.message);
     } catch (error) {
       console.error("Error fetching refined question:", error);
+    } finally {
+      // Set loading state to false regardless of whether the request was successful or not
+      setIsLoading(false);
     }
   };
 
@@ -133,6 +145,8 @@ function App() {
       }, 5000);
       return;
     }
+    // Set loading state to true
+    setIsGenerating(true);
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/solve`,
@@ -143,7 +157,9 @@ function App() {
               content:
                 "You're an AI with proficiency in Data Structures and Algorithms. Your task is to write a function with driver code that solves the following problem:",
             },
-            { role: "user", content: refinedQuestion },
+            // { role: "user", content: refinedQuestion },
+            { role: "user", content: question },
+
             {
               role: "user",
               content: "The function signature:  " + functionSignature,
@@ -183,6 +199,7 @@ function App() {
 
       setOutput(output);
       addOutput(output);
+      setIsGenerating(false);
 
       // Execute the code and compare the output with expected results
       try {
@@ -304,8 +321,11 @@ function App() {
         <button
           className="p-2 bg-blue-500 text-white rounded transform active:bg-blue-700 active:scale-90 transition duration-150"
           onClick={generateRefinedQuestion}
+          disabled={isLoading}
         >
-          Generate Refined Question
+          {isLoading
+            ? "Generating Refined Question..."
+            : "Generate Refined Question"}
         </button>
       </div>
       <section className=" -mx-8 py-4 bg-gray-100 ">
@@ -345,8 +365,9 @@ function App() {
             <button
               className="p-2 bg-blue-500 text-white rounded transform active:bg-blue-700 active:scale-90 transition duration-150"
               onClick={generateSolution}
+              disabled={isGenerating}
             >
-              Generate Solutions
+              {isGenerating ? "Generating Solutions..." : "Generate Solutions"}
             </button>
             <div className="flex items-center space-x-2">
               <input

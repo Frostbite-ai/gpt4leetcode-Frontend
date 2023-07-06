@@ -56,7 +56,7 @@ const Sidebar = () => {
 
         <div className="mt-16 flex flex-col space-y-8">
           <div>
-            <label htmlFor="apiKey">Enter your API Key:</label>
+            <label htmlFor="apiKey">Enter your GPT-4 API Key:</label>
             <input
               type="text"
               id="apiKey"
@@ -69,7 +69,7 @@ const Sidebar = () => {
 
           <div>
             <label htmlFor="difficulty">
-              Difficulty Level (0 - 1): {difficultyLevel}
+              Temperature (0 - 1): {difficultyLevel}
             </label>
             <input
               className="w-full"
@@ -97,6 +97,9 @@ const Sidebar = () => {
                 </option>
               ))}
             </select>
+            <label className="opacity-30 text-sm" htmlFor="language">
+              Python Preferred{" "}
+            </label>
           </div>
         </div>
       </div>
