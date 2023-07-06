@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { XIcon, MenuIcon } from "@heroicons/react/solid";
 import clsx from "clsx";
 
-const Sidebar = () => {
+const Sidebar = ({ password, setPassword }) => {
   const initialApiKey =
     localStorage.getItem("apiKey") || "sk-cFhoqOqlwCMIg*******************";
   const initialDifficultyLevel =
@@ -11,6 +11,7 @@ const Sidebar = () => {
   const initialLanguage = localStorage.getItem("language") || "Python";
 
   const [isOpen, setIsOpen] = useState(false);
+
   const [apiKey, setApiKey] = useState(initialApiKey);
   const [difficultyLevel, setDifficultyLevel] = useState(
     initialDifficultyLevel
@@ -100,6 +101,17 @@ const Sidebar = () => {
             <label className="opacity-30 text-sm" htmlFor="language">
               Python Preferred{" "}
             </label>
+          </div>
+
+          <div>
+            <label htmlFor="Password">Enter Access Password:</label>
+            <input
+              type="text"
+              id="Password"
+              className="p-2 mt-2 border w-full text-gray-900 border-gray-300 rounded"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </div>
         </div>
       </div>

@@ -9,7 +9,7 @@
 // Moreover, the security of code execution and the effectiveness of the comparison mechanism between produced and expected results are crucial aspects to be handled carefully. A sandboxed environment is advisable for executing the AI-generated code to ensure the system's safety.
 
 // Also, the process must have a manual override mechanism to prevent infinite iterations and resource wastage in case of non-convergent scenarios. Furthermore, efficiency of the iteration process and speed of response from GPT-4 need to be optimized for an improved user experience."
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { XIcon } from "@heroicons/react/outline";
 import AceEditor from "react-ace";
@@ -35,6 +35,14 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
+  const initialPassword = localStorage.getItem("password") || "";
+  const [password, setPassword] = useState(initialPassword);
+
+  useEffect(() => {
+    localStorage.setItem("password", password);
+  }, [password]);
+
+  // const password = "123456789";
   const handleClose = () => {
     setError("");
   };
@@ -43,66 +51,15 @@ function App() {
     setOutputs((oldOutputs) => [...oldOutputs, output]);
   };
 
-  // const handleRunCode = async () => {
-  //   if (!question || !testcase1 || !testcase2) {
-  //     setError("All fields must be filled before running the code.");
-  //     setTimeout(() => {
-  //       setError("");
-  //     }, 5000);
-  //     return;
-  //   }
-
-  //   // Execute the code and compare the output with expected results
-  //   try {
-  //     const response = await axios.post(
-  //       `${import.meta.env.VITE_BACKEND_URL}/run-python`,
-  //       {
-  //         code: output,
-  //         testcase: testcase1,
-  //       },
-  //       {
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //       }
-  //     );
-  //     if (response.data.success) {
-  //       console.log("Code executed successfully");
-  //       console.log("Output: ", response.data.output);
-
-  //       // Save the output to the state
-  //       setExecutionResults((oldResults) => [
-  //         ...oldResults,
-  //         response.data.output,
-  //       ]);
-
-  //       // Compare output with expected output
-  //       if (response.data.output.toString().trim() === expectedOutput1.trim()) {
-  //         console.log("Test case passed");
-  //       } else {
-  //         console.log("Test case failed");
-  //       }
-  //     } else {
-  //       console.log("Code execution failed: ", response.data.message);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error executing code: ", error);
-  //   }
-  // };
-
-  const generateRefinedQuestion = async (attempt = 1) => {
-    if (attempt > iterationLimit) {
-      console.log("Max number of attempts reached.");
-      setIsGenerating(false);
-      return;
-    }
-    if (!question || !testcase1) {
+  const generateRefinedQuestion = async () => {
+    if (!question || !testcase1 || !expectedOutput1) {
       setError(
         "All fields must be filled before generating the refined question."
       );
+
       setTimeout(() => {
         setError("");
-      }, 5000);
+      }, 3000);
       return;
     }
     // Set loading state to true
@@ -115,7 +72,7 @@ function App() {
             {
               role: "system",
               content:
-                "You're an AI with proficiency in Data Structures and Algorithms. Your task is to rewrite the following complex problem statement into a simpler one, ensuring that all necessary details for solving the problem are retained:",
+                "As an AI model developed with a strong command of Data Structures and Algorithms, your assignment is to decipher the intricate problem statement provided and articulate it differently, yet ensuring that all the crucial specifics necessary for solving the problem are conserved.",
             },
             { role: "user", content: question },
           ],
@@ -123,6 +80,7 @@ function App() {
         {
           headers: {
             "Content-Type": "application/json",
+            Password: password,
           },
         }
       );
@@ -135,14 +93,53 @@ function App() {
     }
   };
 
-  const generateSolution = async () => {
-    if (!functionSignature || !refinedQuestion) {
+  let message = [
+    {
+      role: "system",
+      content:
+        "You're an AI with proficiency in Data Structures and Algorithms. Your task is to write a function with driver code that solves the following problem:",
+    },
+    { role: "user", content: question },
+    {
+      role: "user",
+      content: "The function signature:  " + functionSignature,
+    },
+    {
+      role: "user",
+      content:
+        "The Driver Code must have this testcase only as input hardcoded :  " +
+        testcase1 +
+        "\n  , and it should print out this output exactly: " +
+        expectedOutput1,
+    },
+    {
+      role: "user",
+      content:
+        "Send me the code in Python that solves this problem and it should have only one testcase hardcoded in the driver code. ",
+    },
+  ];
+
+  const generateSolution = async (attempt = 1) => {
+    console.log(`Initial attempt value: ${attempt}, type: ${typeof attempt}`); // Debugging line
+
+    if (attempt > iterationLimit) {
+      console.log("Max number of attempts reached.");
+      setIsGenerating(false);
+      return;
+    }
+    console.log(`attempt: ${attempt}, iterationLimit: ${iterationLimit}`);
+    if (
+      !functionSignature ||
+      !refinedQuestion ||
+      !testcase1 ||
+      !expectedOutput1
+    ) {
       setError(
         "All fields must be filled before generating the refined question."
       );
       setTimeout(() => {
         setError("");
-      }, 5000);
+      }, 3000);
       return;
     }
     // Set loading state to true
@@ -151,37 +148,12 @@ function App() {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/solve`,
         {
-          messages: [
-            {
-              role: "system",
-              content:
-                "You're an AI with proficiency in Data Structures and Algorithms. Your task is to write a function with driver code that solves the following problem:",
-            },
-            // { role: "user", content: refinedQuestion },
-            { role: "user", content: question },
-
-            {
-              role: "user",
-              content: "The function signature:  " + functionSignature,
-            },
-            {
-              role: "user",
-              content:
-                "The Driver Code must have this testcase only as input hardcoded :  " +
-                testcase1 +
-                "\n  , and it should print out this output exactly: " +
-                expectedOutput1,
-            },
-            {
-              role: "user",
-              content:
-                "Send me the code in Python that solves this problem and it should have only one testcase hardcoded in the driver code. ",
-            },
-          ],
+          messages: message,
         },
         {
           headers: {
             "Content-Type": "application/json",
+            Password: password,
           },
         }
       );
@@ -212,6 +184,7 @@ function App() {
           {
             headers: {
               "Content-Type": "application/json",
+              Password: password,
             },
           }
         );
@@ -227,11 +200,23 @@ function App() {
 
           // Compare output with expected output
           if (
-            response.data.output.toString().trim() === expectedOutput1.trim()
+            response.data.output.toString().trim().toLowerCase() ===
+            expectedOutput1.trim().toLowerCase()
           ) {
             console.log("Test case passed");
           } else {
             console.log("Test case failed");
+            const addMessage = {
+              role: "user",
+              content: `Attempt #${attempt}:\n${output}\nExpected output: ${expectedOutput1}, the above code gave: ${response.data.output}\nSend me the new Code in Python that solves this problem and it should have only one testcase hardcoded in the driver code as mentioned above.`,
+            };
+
+            // Append the new message
+            message.push(addMessage);
+
+            // Generate solution again with the updated question
+            const newAttempt = Number(attempt) + 1;
+            generateSolution(newAttempt);
           }
         } else {
           console.log("Code execution failed: ", response.data.message);
@@ -251,7 +236,7 @@ function App() {
           🧩 Data Structure & Algorithm Solution Generator
         </h1>
         <div className="absolute right-0 top-5 sm:top-0 mt-2">
-          <Sidebar />
+          <Sidebar password={password} setPassword={setPassword} />
         </div>
       </div>
       <div className="h-1 w-full bg-blue-500 mt-4"></div>
@@ -304,13 +289,13 @@ function App() {
           </h1>
           <textarea
             className="w-full p-2 border rounded"
-            placeholder="Enter Testcase 2"
+            placeholder="Enter Testcase 2 (Optional)"
             value={testcase2}
             onChange={(e) => setTestcase2(e.target.value)}
           />
           <textarea
             className="w-full p-2 border rounded"
-            placeholder="Expected Output"
+            placeholder="Expected Output (Optional)"
             value={expectedOutput2}
             onChange={(e) => setExpectedOutput2(e.target.value)}
           />
@@ -364,7 +349,7 @@ function App() {
           <div className="flex gap-4">
             <button
               className="p-2 bg-blue-500 text-white rounded transform active:bg-blue-700 active:scale-90 transition duration-150"
-              onClick={generateSolution}
+              onClick={() => generateSolution(1)}
               disabled={isGenerating}
             >
               {isGenerating ? "Generating Solutions..." : "Generate Solutions"}
@@ -438,8 +423,26 @@ function App() {
                 </h2>
                 <h2 className="text-xl  sm:hidden font-bold pb-1"> Output</h2>
 
+                {/* ${
+                        
+                          
+                      } */}
+
                 <textarea
-                  className="w-full p-2 border rounded"
+                  // className={`w-full p-2 border rounded
+
+                  // ? "bg-green-100"
+                  //     : "bg-red-200"
+                  // `}
+                  className={`w-full p-2 border rounded ${
+                    executionResults[index] &&
+                    expectedOutput1 &&
+                    executionResults[index].toString().trim().toLowerCase() ===
+                      expectedOutput1.trim().toLowerCase()
+                      ? "bg-green-100"
+                      : "bg-red-200"
+                  }`}
+                  // className="w-full p-2 border     rounded"
                   value={executionResults[index]}
                   rows="6"
                   readOnly
