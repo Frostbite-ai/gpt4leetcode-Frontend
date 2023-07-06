@@ -43,7 +43,7 @@ function App() {
     // Execute the code and compare the output with expected results
     try {
       const response = await axios.post(
-        "http://localhost:8000/run-python",
+        `${import.meta.env.VITE_BACKEND_URL}/run-python`,
         {
           code: output,
           testcase: testcase1,
@@ -87,7 +87,7 @@ function App() {
     }
     try {
       const response = await axios.post(
-        "http://localhost:8000/simplify",
+        `${import.meta.env.VITE_BACKEND_URL}/simplify`,
         {
           messages: [
             {
@@ -119,7 +119,7 @@ function App() {
     }
     try {
       const response = await axios.post(
-        "http://localhost:8000/solve",
+        `${import.meta.env.VITE_BACKEND_URL}/solve`,
         {
           messages: [
             {
@@ -171,7 +171,7 @@ function App() {
       // Execute the code and compare the output with expected results
       try {
         const response = await axios.post(
-          "http://localhost:8000/run-python",
+          `${import.meta.env.VITE_BACKEND_URL}/run-python`,
           {
             code: output,
             testcase: testcase1,
