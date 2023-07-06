@@ -38,6 +38,9 @@ function App() {
   const handleRunCode = async () => {
     if (!question || !testcase1 || !testcase2) {
       setError("All fields must be filled before running the code.");
+      setTimeout(() => {
+        setError("");
+      }, 5000);
       return;
     }
     // Execute the code and compare the output with expected results
@@ -83,6 +86,9 @@ function App() {
       setError(
         "All fields must be filled before generating the refined question."
       );
+      setTimeout(() => {
+        setError("");
+      }, 5000);
       return;
     }
     try {
@@ -115,6 +121,9 @@ function App() {
       setError(
         "All fields must be filled before generating the refined question."
       );
+      setTimeout(() => {
+        setError("");
+      }, 5000);
       return;
     }
     try {
@@ -213,8 +222,9 @@ function App() {
 
   return (
     <div className="App p-8 space-y-4">
-      <h1 className="text-4xl font-bold">
+      <h1 className="text-4xl  justify-center  items-center flex-col flex  pb-4 font-bold relative">
         Data Structure & Algorithm Solution Generator
+        <div className="h-1  w-full bg-blue-500 mt-4"></div>
       </h1>
 
       {error && (
@@ -231,6 +241,7 @@ function App() {
       )}
       <div className="flex flex-wrap gap-4">
         <div className="flex-grow" style={{ flex: 4 }}>
+          <h1 className="text-2xl pb-2 font-bold">Enter Question</h1>
           <textarea
             className="w-full p-2 border rounded"
             placeholder="Enter the question"
@@ -241,6 +252,7 @@ function App() {
         </div>
 
         <div className="flex-grow" style={{ flex: 1 }}>
+          <h1 className="text-2xl pb-2 font-bold">Enter Testcases</h1>
           <textarea
             className="w-full p-2 border rounded"
             placeholder="Enter Testcase 1"
@@ -256,6 +268,7 @@ function App() {
         </div>
 
         <div className="flex-grow" style={{ flex: 1 }}>
+          <h1 className="text-2xl font-bold pb-2 invisible">Testcase 2</h1>
           <textarea
             className="w-full p-2 border rounded"
             placeholder="Enter Testcase 2"
@@ -291,7 +304,9 @@ function App() {
           />
         </div>
         <div className="flex-grow" style={{ flex: 2 }}>
-          <h2 className="text-2xl font-bold pb-2">Function Signature</h2>
+          <h2 className="text-2xl font-bold invisible  pb-2">
+            Function Signature
+          </h2>
           <textarea
             className="w-full p-2 border rounded"
             placeholder="Enter Function Signature"
